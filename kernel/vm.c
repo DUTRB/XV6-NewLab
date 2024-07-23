@@ -402,6 +402,14 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 // Copy bytes to dst from virtual address srcva in a given page table,
 // until a '\0', or max.
 // Return 0 on success, -1 on error.
+
+/**
+ * 作用：将用户空间中的以空字符串结尾的字符串复制到内核空间
+ * pagetable_t pagetable  目标进程的页表
+ * char *dst     内核空间的目标缓冲区
+ * uint64 srcva  用户空间的源虚拟地址
+ * 
+ */
 int
 copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 {

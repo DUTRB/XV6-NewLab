@@ -21,11 +21,17 @@ fetchaddr(uint64 addr, uint64 *ip)
 
 // Fetch the nul-terminated string at addr from the current process.
 // Returns length of string, not including nul, or -1 for error.
+// 用于从当前进程中获取一个以空字符结尾的字符串的函数
+/**
+ * uint64 addr  要获取的字符串在进程地址空间中的虚拟地址
+ * char *buf    存储获取字符串的位置
+ * int max      缓冲区的最大长度
+ */
 int
 fetchstr(uint64 addr, char *buf, int max)
 {
-  struct proc *p = myproc();
-  int err = copyinstr(p->pagetable, buf, addr, max);
+  struct proc *p = myproc();  // 获取进程的指针
+  int err = copyinstr(p->pagetable, buf, addr, max);  // 从进程的地址空间中复制字符串
   if(err < 0)
     return err;
   return strlen(buf);
@@ -54,6 +60,8 @@ argraw(int n)
 }
 
 // Fetch the nth 32-bit system call argument.
+// 从当前进程的寄存器或栈中获取第n个32位的系统调用参数
+// 成功返回0，存储在ip中
 int
 argint(int n, int *ip)
 {
@@ -104,7 +112,9 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_trace(void);
 
+// 系统调用的函数指针表
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -127,7 +137,34 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
 };
+
+static char *syscalls_name[] = {
+[SYS_fork]    "fork",
+[SYS_exit]    "exit",
+[SYS_wait]    "wait",
+[SYS_pipe]    "pipe",
+[SYS_read]    "read",
+[SYS_kill]    "kill",
+[SYS_exec]    "exec",
+[SYS_fstat]   "fstat",
+[SYS_chdir]   "chdir",
+[SYS_dup]     "dup",
+[SYS_getpid]  "getpid",
+[SYS_sbrk]    "sbrk",
+[SYS_sleep]   "sleep",
+[SYS_uptime]  "uptime",
+[SYS_open]    "open",
+[SYS_write]   "write",
+[SYS_mknod]   "mknod",
+[SYS_unlink]  "unlink",
+[SYS_link]    "link",
+[SYS_mkdir]   "mkdir",
+[SYS_close]   "close",
+[SYS_trace]   "trace",
+};
+
 
 void
 syscall(void)
@@ -135,9 +172,13 @@ syscall(void)
   int num;
   struct proc *p = myproc();
 
-  num = p->trapframe->a7;
+  num = p->trapframe->a7;  // 系统调用号存储在 a7 寄存器中
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    p->trapframe->a0 = syscalls[num]();
+    p->trapframe->a0 = syscalls[num](); // 返回值存放在 a0 寄存器中
+
+    if(p->traceMask & (1 << num)){
+      printf("%d: syscall %s -> %d\n", p->pid, syscalls_name[num], p->trapframe->a0); // 打印
+    }
   } else {
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);

@@ -82,25 +82,27 @@ struct trapframe {
 
 enum procstate { UNUSED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
-// Per-process state
+// Per-process state   进程结构体示例
 struct proc {
-  struct spinlock lock;
+  struct spinlock lock;    // 自旋锁
 
   // p->lock must be held when using these:
-  enum procstate state;        // Process state
-  struct proc *parent;         // Parent process
+  enum procstate state;        // Process state   进程状态 进程是已分配、就绪态、运行态、等待I/O中（阻塞态）还是退出
+  struct proc *parent;         // Parent process  父进程指针
   void *chan;                  // If non-zero, sleeping on chan
   int killed;                  // If non-zero, have been killed
-  int xstate;                  // Exit status to be returned to parent's wait
+  int xstate;                  // Exit status to be returned to parent's wait 进程退出状态 返回给父进程的wait调用
   int pid;                     // Process ID
 
   // these are private to the process, so p->lock need not be held.
-  uint64 kstack;               // Virtual address of kernel stack
-  uint64 sz;                   // Size of process memory (bytes)
-  pagetable_t pagetable;       // User page table
-  struct trapframe *trapframe; // data page for trampoline.S
-  struct context context;      // swtch() here to run process
-  struct file *ofile[NOFILE];  // Open files
-  struct inode *cwd;           // Current directory
+  uint64 kstack;               // Virtual address of kernel stack  进程在内核空间的栈的虚拟地址
+  uint64 sz;                   // Size of process memory (bytes)    进程占用内存大小
+  pagetable_t pagetable;       // User page table        用户空间页表
+  struct trapframe *trapframe; // data page for trampoline.S 指向陷阱帧（trapframe）的指针，这是内核在进程上下文中保存寄存器状态的地方。
+  struct context context;      // swtch() here to run process  进程的上下文结构体，swtch 函数将切换到此上下文以运行进程
+  struct file *ofile[NOFILE];  // Open files  存储进程打开的文件的指针
+  struct inode *cwd;           // Current directory  指向进程当前工作目录的 inode 结构体的指针。
   char name[16];               // Process name (debugging)
+
+  uint64 traceMask;   // 定义的追踪掩码
 };

@@ -127,6 +127,8 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // 初始化 traceMask;
+  p->traceMask = 0;
   return p;
 }
 
@@ -266,6 +268,9 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
+
+  // 继承父进程的traceMask
+  np->traceMask = p->traceMask;
 
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
