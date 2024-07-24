@@ -8,7 +8,7 @@
 
 struct cpu cpus[NCPU];
 
-struct proc proc[NPROC];
+struct proc proc[NPROC];  // 64个进程
 
 struct proc *initproc;
 
@@ -697,4 +697,22 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+
+/**
+ * 计算由多少非处于 UNUSED 状态的进程
+ */
+uint64
+countFreeProc(void){
+  struct proc *p;
+  uint64 countOfProc = 0;
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED){
+      countOfProc += 1;
+    }
+    release(&p->lock);
+  }
+  return countOfProc;
 }
