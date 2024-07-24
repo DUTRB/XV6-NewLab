@@ -57,6 +57,7 @@ kfree(void *pa)
   r = (struct run*)pa;
 
   acquire(&kmem.lock);
+  // 头插法将页面加入到空闲列表中
   r->next = kmem.freelist;
   kmem.freelist = r;
   release(&kmem.lock);
@@ -65,6 +66,7 @@ kfree(void *pa)
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
+// 删除并返回空闲列表中的第一个元素
 void *
 kalloc(void)
 {

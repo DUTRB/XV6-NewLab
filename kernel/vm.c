@@ -277,6 +277,7 @@ freewalk(pagetable_t pagetable)
   // there are 2^9 = 512 PTEs in a page table.
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
+    //pte & (PTE_R|PTE_W|PTE_X)) == 0 此条件表示该PTE不是末层，仍然可以向下指向下一层
     if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
       // this PTE points to a lower-level page table.
       uint64 child = PTE2PA(pte);
@@ -439,4 +440,34 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+// 递归打印函数
+void vmprint_fun(pagetable_t pagetable, int depth){
+  static char* indent[] = {
+    "",
+    "..",
+    ".. ..",
+    ".. .. .."
+  };
+  if(depth <= 0 || depth > 4){
+    panic("Depth error!");
+  }
+  // 遍历 512 PTE
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V){
+      printf("%s%d: pte %p pa %p\n", indent[depth], i, pte, PTE2PA(pte));
+      if((pte & (PTE_R | PTE_W | PTE_X)) == 0){
+        // 这个PTE指向下一层
+        uint64 child = PTE2PA(pte);
+        vmprint_fun((pagetable_t)child, depth + 1);
+      }
+    }
+  }
+}
+// 打印 PTE 函数
+void
+vmprint(pagetable_t pagetable){
+  printf("page table %p\n", pagetable);
+  vmprint_fun(pagetable, 1);
 }
