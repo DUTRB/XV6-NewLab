@@ -25,21 +25,14 @@ extern char trampoline[]; // trampoline.S
 void
 procinit(void)
 {
-  struct proc *p;
+  struct proc *p = proc;
   
   initlock(&pid_lock, "nextpid");
   for(p = proc; p < &proc[NPROC]; p++) {
       initlock(&p->lock, "proc");
 
-      // Allocate a page for the process's kernel stack.
-      // Map it high in memory, followed by an invalid
-      // guard page.
-      char *pa = kalloc();
-      if(pa == 0)
-        panic("kalloc");
-      uint64 va = KSTACK((int) (p - proc));
-      kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
-      p->kstack = va;
+      // 下面的内容被剪切修改
+      
   }
   kvminithart();
 }
@@ -121,6 +114,29 @@ found:
     return 0;
   }
 
+  // 初始化内核页表
+  p->kernelpt = proc_kpt_init();
+  if(p->kernelpt == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
+  // 剪切到此处 确保每个进程的内核页表关于该进程的内核栈有一个映射
+  // Allocate a page for the process's kernel stack.
+  // Map it high in memory, followed by an invalid
+  // guard page.
+
+  char *pa = kalloc();
+  if(pa == 0)
+    panic("kalloc");
+
+  uint64 va = KSTACK((int) (p - proc));
+  uvmmap(p->kernelpt, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+  //kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+  p->kstack = va;
+
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -142,6 +158,14 @@ freeproc(struct proc *p)
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
+
+  if(p->kernelpt){
+    proc_freekernelpt(p->kernelpt);
+  }
+  p->kernelpt = 0;
+
+  p->kstack = 0;
+
   p->sz = 0;
   p->pid = 0;
   p->parent = 0;
@@ -150,7 +174,17 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  // if (p->kernelpt) {
+  //   freeprockvm(p);
+  //   p->kernelpt = 0;
+  // }
+  
+  // 释放内核栈
+  //uvmunmap(p->kernelpt, p->kstack, 1, 1);
+  
 }
+
 
 // Create a user page table for a given process,
 // with no user memory, but with trampoline pages.
@@ -473,7 +507,14 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+
+        // 存储内核页表到 satp寄存器
+        proc_inithart(p->kernelpt);
+
         swtch(&c->context, &p->context);
+
+        // 结束后切换回原先的内核页表
+        kvminithart();
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
@@ -696,4 +737,20 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// 释放进程的内核页表
+void
+proc_freekernelpt(pagetable_t kernelpt){
+  for(int i = 0; i < 512; i++){
+    pte_t pte = kernelpt[i];
+    if(pte & PTE_V){
+      kernelpt[i] = 0;
+      if((pte & (PTE_R | PTE_W | PTE_X)) == 0){
+        uint64 child = PTE2PA(pte);
+        proc_freekernelpt((pagetable_t)child);
+      }
+    }
+  }
+  kfree((void*)kernelpt);
 }
