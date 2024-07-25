@@ -77,9 +77,17 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+    p->ticks_since_lastTime += 1;
+    if(p->is_alarming == 0 && p->alarm_period != 0 
+                           && p->ticks_since_lastTime == p->alarm_period){
+      p->is_alarming = 1;
+      *p->alarmframe = *p->trapframe;
+      p->trapframe->epc = (uint64)p->alarm_handler;  // 修改跳转位置到 alarm 函数
+      p->ticks_since_lastTime = 0;
+    }
     yield();
-
+  }
   usertrapret();
 }
 
