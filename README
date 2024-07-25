@@ -2,6 +2,7 @@ xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern RISC-V multiprocessor using ANSI C.
 
+
 lazy page allocation 迟分配是xv6针对page table使用的一个优化. 在用户程序申请更多的内存时, 
 并不立刻分配物理地址, 而是在之后当它们真的需要使用这些地址并产生page fault interrupt(缺页中断)
 时再进行分配. 理由是因为, 在很多时候程序的使用遵循一个fork + execv的的模式, 
