@@ -69,7 +69,11 @@ sys_sleep(void)
     }
     sleep(&ticks, &tickslock);
   }
+  
   release(&tickslock);
+  // 添加调用
+  backtrace();
+
   return 0;
 }
 
