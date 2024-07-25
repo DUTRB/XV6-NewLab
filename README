@@ -2,4 +2,10 @@ xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern RISC-V multiprocessor using ANSI C.
 
-lazy page allocation 迟分配是xv6针对page table使用的一个优化. 在用户程序申请更多的内存时, 并不立刻分配物理地址, 而是在之后当它们真的需要使用这些地址并产生page fault interrupt(缺页中断)时再进行分配. 理由是因为, 在很多时候程序的使用遵循一个fork + execv的的模式, 而fork是子进程会先复制父进程所有的内存页表, 但execv后又会全部丢弃它们而造成浪费时间和内存空间. 需要对之前lab3 page table的内存映射相关的知识有一个比较清晰的思路. 在课程视频里, 教授已经提供了一个最迷你基础版本的lazy allocation, 我们需要在这个lab里把它补全完善功能, 加入额外的处理逻辑来应对缺页中断异常(13号或15号).
+lazy page allocation 迟分配是xv6针对page table使用的一个优化. 在用户程序申请更多的内存时, 
+并不立刻分配物理地址, 而是在之后当它们真的需要使用这些地址并产生page fault interrupt(缺页中断)
+时再进行分配. 理由是因为, 在很多时候程序的使用遵循一个fork + execv的的模式, 
+而fork是子进程会先复制父进程所有的内存页表, 但execv后又会全部丢弃它们而造成浪费时间和内存空间. 
+需要对之前lab3 page table的内存映射相关的知识有一个比较清晰的思路. 在课程视频里, 
+教授已经提供了一个最迷你基础版本的lazy allocation, 我们需要在这个lab里把它补全完善功能, 
+加入额外的处理逻辑来应对缺页中断异常(13号或15号).
