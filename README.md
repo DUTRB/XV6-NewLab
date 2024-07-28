@@ -5,7 +5,7 @@ but is implemented for a modern RISC-V multiprocessor using ANSI C.
 xv6本身已经是一个可以运行的简易的操作系统了. 6.S081这门课并不是从零开始空手造一个xv6操作系统, 
 而是针对操作系统的不同角度, 在每个lab里让我们根据已有的功能, 对xv6进行优化.
 
-## 1. 为什么要有虚拟内存？（好处和作用）
+## 1. 为什么要有虚拟内存？
 
 - 隔离
     
@@ -55,6 +55,4 @@ xv6本身已经是一个可以运行的简易的操作系统了. 6.S081这门课
 8. trampoline中的userret做的就很简单了，切换回用户页表，从trapframe恢复用户寄存器
 9. 执行sret返回到UMode
 
-| 系统调用流程    | 
-| ------------ |
-| <img src="pic/系统调用流程.drawio.png"/> |
+<img src="pic/系统调用流程.drawio.png"/> 
