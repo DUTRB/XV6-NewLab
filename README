@@ -1,8 +1,0 @@
-xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
-but is implemented for a modern RISC-V multiprocessor using ANSI C.
-
-
-xv6本身已经是一个可以运行的简易的操作系统了. 6.S081这门课并不是从零开始空手造一个xv6操作系统, 
-而是针对操作系统的不同角度, 在每个lab里让我们根据已有的功能, 对xv6进行优化. 而且每个实验都是互不相关的, 
-即每个lab开始时我们都该重新git checkout到一个xv6初始版本的branch, 而不是根据我们之前的lab实现而累积开发.

@@ -25,10 +25,12 @@ uservec:
         #
         
 	# swap a0 and sscratch
-        # so that a0 is TRAPFRAME
+        # so that a0 is TRAPFRAME  此时 a0 就是trapframe的位置
+        # a0 的原值被保存在 sscratch中，将a0空出来执行后面的操作
         csrrw a0, sscratch, a0
 
         # save the user registers in TRAPFRAME
+        # 向trapframe中正确的位置保存用户寄存器
         sd ra, 40(a0)
         sd sp, 48(a0)
         sd gp, 56(a0)
@@ -60,10 +62,13 @@ uservec:
         sd t5, 272(a0)
         sd t6, 280(a0)
 
-	# save the user a0 in p->trapframe->a0
+	# save the user a0 in p->trapframe->a0 
+        # 将a0的原值（保存在sscratch）和t0交换
         csrr t0, sscratch
+        # 将t0保存到trapframe中a0所在的位置（112(a0)）
         sd t0, 112(a0)
-
+        
+        # 加载内核执行环境
         # restore kernel stack pointer from p->trapframe->kernel_sp
         ld sp, 8(a0)
 
@@ -75,7 +80,8 @@ uservec:
 
         # restore kernel page table from p->trapframe->kernel_satp
         ld t1, 0(a0)
-        csrw satp, t1
+        # 用户页表被切换到内核页表
+        csrw satp, t1   
         sfence.vma zero, zero
 
         # a0 is no longer valid, since the kernel page

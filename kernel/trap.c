@@ -63,7 +63,7 @@ usertrap(void)
     // an interrupt will change sstatus &c registers,
     // so don't enable until done with those registers.
     intr_on();
-
+    // 执行系统调用
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
