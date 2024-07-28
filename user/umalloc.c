@@ -6,7 +6,7 @@
 // Memory allocator by Kernighan and Ritchie,
 // The C programming Language, 2nd ed.  Section 8.7.
 
-typedef long Align;
+typedef long Align;  // 内存对齐
 
 union header {
   struct {
@@ -19,7 +19,7 @@ union header {
 typedef union header Header;
 
 static Header base;
-static Header *freep;
+static Header *freep;   // 指向空闲 header 的指针
 
 void
 free(void *ap)
@@ -43,6 +43,7 @@ free(void *ap)
   freep = p;
 }
 
+// 使用sbrk系统调用申请更多的物理内存
 static Header*
 morecore(uint nu)
 {
@@ -65,12 +66,13 @@ malloc(uint nbytes)
 {
   Header *p, *prevp;
   uint nunits;
-
+  // 计算所需的内存单元数
   nunits = (nbytes + sizeof(Header) - 1)/sizeof(Header) + 1;
   if((prevp = freep) == 0){
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
+  // 遍历空闲链表找到足够大的块
   for(p = prevp->s.ptr; ; prevp = p, p = p->s.ptr){
     if(p->s.size >= nunits){
       if(p->s.size == nunits)
@@ -83,6 +85,7 @@ malloc(uint nbytes)
       freep = prevp;
       return (void*)(p + 1);
     }
+    // 未找到足够大的块
     if(p == freep)
       if((p = morecore(nunits)) == 0)
         return 0;

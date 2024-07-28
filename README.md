@@ -56,3 +56,53 @@ xv6本身已经是一个可以运行的简易的操作系统了. 6.S081这门课
 9. 执行sret返回到UMode
 
 <img src="pic/系统调用流程.drawio.png"/> 
+
+## 4. 操作系统内存管理模块
+
+- 内存的申请与释放
+    
+    管理系统内存池，实现为为进程分配和释放内存。
+    
+- 虚拟内存管理
+    
+    允许进程使用虚拟内存，并将虚拟内存映射到物理内存，包含地址转换，分页机制，页表管理等。
+    
+- 共享内存
+    
+    允许多个进程共享相同的内存空间，以便轻松的进程进程通信和数据共享。
+    
+- 内存监控与性能优化
+    
+    负责跟踪系统内存使用情况，以及性能分析和优化内存分配策略。
+    
+
+## 5. XV6 如何分配内存？
+
+用户态程序通过malloc申请内存，malloc维护一个内存池。当malloc无法提供合适内存时，将使用sbrk系统调用向操作系统申请新的堆内存，sbrk会在页表中做好标记，提供足量的虚拟内存空间，并通过kalloc申请足量的物理内存映射到新的虚拟内存中，以便返回这些虚拟内存供malloc使用。
+
+实际的物理内存中的空闲页面通过链表连接管理，kalloc在该空闲链表中获取物理内存。
+
+```cpp
+// Allocate one 4096-byte page of physical memory. 申请的是4096字节的实际物理地址
+// Returns a pointer that the kernel can use.
+// Returns 0 if the memory cannot be allocated.
+void *
+kalloc(void)
+{
+  struct run *r;
+  acquire(&kmem.lock);
+  // 申请内存操作
+  r = kmem.freelist;        // 指向空闲内存块
+  if(r)
+    kmem.freelist = r->next;
+  release(&kmem.lock);
+  // 将分配的内存块填充标记
+  if(r)
+    memset((char*)r, 5, PGSIZE); // fill with junk
+  return (void*)r;          // 返回空闲内存指针
+}
+```
+
+内存链表的初始大小是0，并且它在第一次调用`malloc`且没有可用的空闲块时被初始化。当需要更多内存时，`malloc`会调用`morecore`来扩展内存。
+
+<img src="pic/malloc-flow.drawio.png"/> 
