@@ -68,6 +68,7 @@ kvminithart()
 //   21..29 -- 9 bits of level-1 index.
 //   12..20 -- 9 bits of level-0 index.
 //    0..11 -- 12 bits of byte offset within the page.
+// 为虚拟地址找到PTE
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
@@ -145,6 +146,9 @@ kvmpa(uint64 va)
 // physical addresses starting at pa. va and size might not
 // be page-aligned. Returns 0 on success, -1 if walk() couldn't
 // allocate a needed page-table page.
+// 将范围虚拟地址到同等范围物理地址的映射装载到一个页表中
+// 在页表中创建页表条目（Page Table Entries, PTEs）
+// 以将指定范围内的虚拟地址映射到相应的物理地址
 int
 mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 {
@@ -158,6 +162,7 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
       return -1;
     if(*pte & PTE_V)
       panic("remap");
+    // 从物理地址中提取页表索引，去除偏移量
     *pte = PA2PTE(pa) | perm | PTE_V;
     if(a == last)
       break;
