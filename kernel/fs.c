@@ -471,7 +471,7 @@ itrunc(struct inode *ip)
       if(a[i]){
         bp1 = bread(ip->dev, a[i]);
         a1 = (uint*)bp->data;
-        for(int j = 0; j < NADDR_PER_BLOCK; j++){
+        for(j = 0; j < NADDR_PER_BLOCK; j++){
           if(a1[j])
             bfree(ip->dev, a1[j]);
         }
