@@ -470,7 +470,7 @@ itrunc(struct inode *ip)
     for(i = 0; i < NADDR_PER_BLOCK; i++){
       if(a[i]){
         bp1 = bread(ip->dev, a[i]);
-        a1 = (uint*)bp->data;
+        a1 = (uint*)bp1->data;
         for(j = 0; j < NADDR_PER_BLOCK; j++){
           if(a1[j])
             bfree(ip->dev, a1[j]);
