@@ -100,6 +100,7 @@ sys_uptime(void)
 uint64
 sys_trace(void){
   int trace_sys_mask;
+  // 获取系统调用的参数
   if(argint(0, &trace_sys_mask) < 0){
     return -1;
   }
